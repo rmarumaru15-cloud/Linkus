@@ -3,13 +3,90 @@
 {% block title %}Login{% endblock title %}
 
 {% block content %}
-<h2>Login</h2>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-primary">Login</button>
-</form>
-<p class="mt-3">
+<div class="row">
+    <div class="col-md-5">
+        <h2>Login with Wallet</h2>
+        <p>Connect your wallet to sign in instantly.</p>
+        <button id="wallet-login-btn" class="btn btn-lg btn-success">Connect Wallet & Login</button>
+        <div id="wallet-error" class="text-danger mt-2"></div>
+    </div>
+    <div class="col-md-2 text-center">
+        <div class="vr" style="height: 100%;"></div>
+        <span class="text-muted">OR</span>
+    </div>
+    <div class="col-md-5">
+        <h2>Login with Email</h2>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary">Login</button>
+        </form>
+    </div>
+</div>
+<hr>
+<p class="mt-3 text-center">
     Don't have an account? <a href="{% url 'accounts:signup' %}">Sign up here</a>.
 </p>
 {% endblock content %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const walletLoginBtn = document.getElementById('wallet-login-btn');
+    const walletErrorDiv = document.getElementById('wallet-error');
+
+    if (!window.ethereum) {
+        walletLoginBtn.textContent = 'MetaMask not found';
+        walletLoginBtn.disabled = true;
+        return;
+    }
+
+    walletLoginBtn.addEventListener('click', async function() {
+        walletErrorDiv.textContent = '';
+        try {
+            // 1. Connect to wallet and get address
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            await provider.send("eth_requestAccounts", []);
+            const signer = provider.getSigner();
+            const walletAddress = await signer.getAddress();
+
+            // 2. Get nonce from our server
+            const nonceResponse = await fetch("{% url 'accounts:get_nonce' %}");
+            const nonceData = await nonceResponse.json();
+            if (!nonceData.nonce) {
+                throw new Error("Could not retrieve nonce from server.");
+            }
+            const nonce = nonceData.nonce;
+
+            // 3. Sign the nonce
+            const signature = await signer.signMessage(nonce);
+
+            // 4. Send address and signature to server to log in
+            const loginResponse = await fetch("{% url 'accounts:wallet_login' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}' // Django provides this in the template
+                },
+                body: JSON.stringify({
+                    wallet_address: walletAddress,
+                    signature: signature
+                })
+            });
+
+            const loginData = await loginResponse.json();
+            if (loginData.success) {
+                // Redirect to home page on successful login
+                window.location.href = "{% url 'posts:list' %}";
+            } else {
+                throw new Error(loginData.message || "Wallet login failed.");
+            }
+
+        } catch (error) {
+            console.error("Wallet login error:", error);
+            walletErrorDiv.textContent = error.message;
+        }
+    });
+});
+</script>
+{% endblock extra_js %}

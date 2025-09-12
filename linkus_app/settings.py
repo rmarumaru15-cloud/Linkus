@@ -53,6 +53,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -117,6 +118,11 @@ AUTH_USER_MODEL = "accounts.User"
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
 LANGUAGE_CODE = "ja"
+
+LANGUAGES = [
+    ('ja', 'Japanese'),
+    ('en', 'English'),
+]
 
 TIME_ZONE = "Asia/Tokyo"
 

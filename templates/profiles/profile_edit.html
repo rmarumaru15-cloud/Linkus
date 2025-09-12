@@ -3,10 +3,61 @@
 {% block title %}Edit Profile{% endblock title %}
 
 {% block content %}
-<h2>Edit Profile</h2>
 <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    {{ form.as_p }}
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3>Edit Your Profile</h3>
+        </div>
+        <div class="card-body">
+            {{ form.as_p }}
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3>Manage SNS Links</h3>
+        </div>
+        <div class="card-body">
+            {{ sns_formset.management_form }}
+            {% for form in sns_formset %}
+                <div class="form-row mb-3">
+                    {{ form.id }}
+                    <div class="row">
+                        <div class="col-md-5">{{ form.platform }}</div>
+                        <div class="col-md-6">{{ form.url }}</div>
+                        <div class="col-md-1 align-self-center">
+                            {% if form.instance.pk %}{{ form.DELETE }}{% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3>Manage Sub-Addresses</h3>
+        </div>
+        <div class="card-body">
+            {{ address_formset.management_form }}
+            {% for form in address_formset %}
+                <div class="form-row mb-3">
+                    {{ form.id }}
+                    <div class="row">
+                        <div class="col-md-3">{{ form.currency_type }}</div>
+                        <div class="col-md-6">{{ form.address }}</div>
+                        <div class="col-md-2 align-self-center">{{ form.is_public.label_tag }} {{ form.is_public }}</div>
+                        <div class="col-md-1 align-self-center">
+                            {% if form.instance.pk %}{{ form.DELETE }}{% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
     <button type="submit" class="btn btn-success">Save Changes</button>
     <a href="{% url 'profiles:detail' username=user.username %}" class="btn btn-secondary">Cancel</a>
 </form>

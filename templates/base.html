@@ -1,3 +1,4 @@
+{% load i18n %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Linkus App{% endblock title %}</title>
     <link rel="stylesheet" href="https://bootswatch.com/5/materia/bootstrap.min.css">
+    <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js" type="application/javascript"></script>
+    {% block extra_head %}{% endblock extra_head %}
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
@@ -16,29 +19,47 @@
             <div class="collapse navbar-collapse" id="navbarColor01">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link active" href="{% url 'posts:list' %}">Home</a>
+                        <a class="nav-link active" href="{% url 'posts:list' %}">{% trans "Home" %}</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'profiles:ranking' %}">Ranking</a>
+                        <a class="nav-link" href="{% url 'profiles:ranking' %}">{% trans "Ranking" %}</a>
                     </li>
                 </ul>
                 <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            {% trans "Language" %}
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            {% get_available_languages as LANGUAGES %}
+                            {% for lang_code, lang_name in LANGUAGES %}
+                                <li>
+                                    <form action="{% url 'set_language' %}" method="post" class="dropdown-item">
+                                        {% csrf_token %}
+                                        <input name="next" type="hidden" value="{{ request.get_full_path|slice:'3:' }}">
+                                        <input name="language" type="hidden" value="{{ lang_code }}">
+                                        <button type="submit" class="btn btn-link p-0">{{ lang_name }}</button>
+                                    </form>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </li>
                     {% if user.is_authenticated %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'profiles:detail' username=user.username %}">{{ user.username }}'s Profile</a>
+                            <a class="nav-link" href="{% url 'profiles:detail' username=user.username %}">{% blocktrans %}{{ user.username }}'s Profile{% endblocktrans %}</a>
                         </li>
                         <li class="nav-item">
                             <form method="post" action="{% url 'logout' %}">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-link nav-link">Logout</button>
+                                <button type="submit" class="btn btn-link nav-link">{% trans "Logout" %}</button>
                             </form>
                         </li>
                     {% else %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'login' %}">Login</a>
+                            <a class="nav-link" href="{% url 'login' %}">{% trans "Login" %}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'accounts:signup' %}">Sign Up</a>
+                            <a class="nav-link" href="{% url 'accounts:signup' %}">{% trans "Sign Up" %}</a>
                         </li>
                     {% endif %}
                 </ul>
